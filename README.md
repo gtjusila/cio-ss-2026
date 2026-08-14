@@ -22,4 +22,4 @@ To confirm that your environment is set up correctly, open a terminal inside VS 
 
 ## Where to Start
 
-Once VS Code is open, in the browser or locally, start by working through `introduction-to-programming-in-cpp.md`. It assumes you have programmed in Python before and introduces the parts of C++ we use in this course.
+Once VS Code is open, in the browser or locally, start by working through [introduction-to-programming-in-cpp.md](https://github.com/gtjusila/cio-ss-2026/blob/main/introduction-to-programming-in-cpp.md). It assumes you have programmed in Python before and introduces the parts of C++ we use in this course.
