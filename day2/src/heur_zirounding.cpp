@@ -122,7 +122,8 @@ SCIP_DECL_HEUREXEC(ZIRoundHeur::scip_exec) {
     // check if var is fractional see is_fractional_remaining hint
     bool found_shift = false;
 
-    for (auto [idx, col] : std::views::enumerate(lp_cols)) {
+    for (auto [idx, col] :
+         std::views::zip(std::views::iota(0U, lp_cols.size()), lp_cols)) {
       // compute how far up / down this variable can be rounded
       // start with var_ub and var_lb via SCIPcolGetUb/ SCIPcolGetLb
       auto col_incumbent = incumbent[idx];
