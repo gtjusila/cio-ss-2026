@@ -12,6 +12,7 @@
 
 #include "branch_driebeekpenalties.hpp"
 #include "heur_zirounding.hpp"
+#include "sepa_gomcut.hpp"
 #include "sepa_liftedknapsack.hpp"
 #include "utils.hpp"
 
