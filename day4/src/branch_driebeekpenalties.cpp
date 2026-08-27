@@ -258,6 +258,63 @@ SCIP_DECL_BRANCHEXECLP(DriebeekPenalties::scip_execlp) {
 
     // TODO: Compute least_up_penalty and least_down_penalty.
 
+/*
+     * General bound-aware Driebeek penalty:
+     */
+    SCIP_Real down_gap = sol - floor(sol);
+    SCIP_Real up_gap   = ceil(sol) - sol;
+
+    auto movement_penalty = [](SCIP* scip, int j, SCIP_Real delta, const std::vector<BaseStat>& base_stats, const std::vector<SCIP_Real>& reduced_costs) {
+        if (base_stats[j] == AtZero) return 0.0;
+        if ((delta < 0 && base_stats[j] == AtLowBound) || (delta > 0 && base_stats[j] == AtUpBound)) { return SCIPinfinity(scip); }
+
+        return reduced_costs[j] * delta;
+    };
+
+    for (auto [j, coeff_j] : std::views::enumerate(tableau_coeff)) {
+      if (base_stats[j] == Basic) { continue; }
+
+      auto down_delta =  down_gap / coeff_j;
+      auto up_delta   = -up_gap   / coeff_j;
+
+      auto mov_pen_up = movement_penalty(scip, j, up_delta, base_stats, reduced_costs);
+      auto mov_pen_down = movement_penalty(scip, j, down_delta, base_stats, reduced_costs);
+
+      if (least_up_penalty > mov_pen_up) {
+        least_up_penalty = mov_pen_up;
+      }
+
+      if (least_down_penalty > mov_pen_down) {
+        least_down_penalty = mov_pen_down;
+      }
+    }
+
+     /*
+     * A movement delta is infeasible if x_j is fixed, if delta > 0 while x_j
+     * is at its upper bound, or if delta < 0 while x_j is at its lower bound.
+     *
+     *   movement_penalty(j, delta) =
+     *     infinity,                 if the movement is infeasible
+     *     0,                        if x_j has AtZero basis status
+     *     reduced_costs[j] * delta, otherwise
+     *
+     * In this minimization problem, movement_penalty is the minimum amount by
+     * which the objective value must worsen (increase) when x_j moves by delta.
+     *
+     *   P_i_down = min over nonbasic j of
+     *              movement_penalty(j, down_delta[j])
+     *
+     *   P_i_up   = min over nonbasic j of
+     *              movement_penalty(j, up_delta[j])
+     *
+     * Thus, P_i_down and P_i_up estimate the minimum objective deterioration
+     * required to reach the down and up branches, respectively.
+     *
+     *   Task 1. compute P_i_down and P_i_up and store them in least_up_penalty
+     * and least_down_penalty
+     *
+     */
+
     /*
     * Our driebeek penalty give lowerbounds on the LP objective if we branch up
     * and down. SCIP also give cutoff value. If the LP relaxation of the node
