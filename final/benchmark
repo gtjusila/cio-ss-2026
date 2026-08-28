@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Benchmark mknap instance classes with read_mps.
+#
+# Usage:  ./benchmark N [N ...]    1=mknap1  2=mknap2  3=mknapcb1  4=mknapcb4
+#
+# Full SCIP statistics per instance land in stats/.
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUILD="$DIR/build"
+MPS="$DIR/mps_files"
+STATS_DIR="$DIR/stats"
+SHIFT=0.1
+
+# Shifted geometric mean: exp(mean(log(x+s))) - s.
+geomean() { # $1 = shift, rest = values
+  awk -v s="$1" 'BEGIN {
+    for (i = 2; i < ARGC; i++) { acc += log(ARGV[i] + s); n++ }
+    printf "%.3f\n", exp(acc / n) - s
+  }' "$@"
+}
+
+row() { printf '%-16s %-12s %10s %12s %20s\n' "$1" "$2" "$3" "$4" "$5" | tee -a "$RESULTS"; }
+
+make -C "$BUILD" read_mps >/dev/null
+
+mkdir -p "$STATS_DIR"
+rm -f "$STATS_DIR"/*.stats
+RESULTS="$STATS_DIR/results.txt"
+: >"$RESULTS"
+
+for sel in "$@"; do
+  case "$sel" in
+  1) cls=mknap1 ;;
+  2) cls=mknap2 ;;
+  3) cls=mknapcb1 ;;
+  4) cls=mknapcb4 ;;
+  esac
+
+  echo "" | tee -a "$RESULTS"
+  echo "== [$sel] $cls ==" | tee -a "$RESULTS"
+  row instance status 'time(s)' nodes primal-dual-integral
+
+  times=()
+  nodelist=()
+  pdilist=()
+  for f in $(cd "$MPS" && ls "${cls}_"*.mps | sort -V); do
+    name="${f%.mps}"
+    statfile="$STATS_DIR/$name.stats"
+    "$BUILD/read_mps" "$MPS/$f" >"$statfile" 2>&1
+
+    status="$(sed -n 's/^Solution Status: *//p' "$statfile" | tail -1)"
+    time="$(sed -n 's/^Time: *//p' "$statfile" | tail -1)"
+    nodes="$(sed -n 's/^Nodes: *//p' "$statfile" | tail -1)"
+    pdi="$(sed -n 's/^PrimalDualIntegral: *//p' "$statfile" | tail -1)"
+
+    row "$name" "$status" "$(printf '%.3f' "$time")" "$nodes" "$(printf '%.3f' "$pdi")"
+    times+=("$time")
+    nodelist+=("$nodes")
+    pdilist+=("$pdi")
+  done
+
+  row -- geomean "$(geomean "$SHIFT" "${times[@]}")" "$(geomean 0 "${nodelist[@]}")" "$(geomean "$SHIFT" "${pdilist[@]}")"
+done
+

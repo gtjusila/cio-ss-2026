@@ -1,0 +1,10 @@
+limits/time=60
+display/verblevel=2
+limits/nodes=100000000
+heuristics/ziround/freq=-1
+branching/driebeekpenalties/priority=999
+branching/random/priority=0
+separating/liftedknapsack/freq=0
+constraints/linear/sepafreq=-1
+constraints/linear/propfreq=-1
+constraints/linear/maxprerounds=0

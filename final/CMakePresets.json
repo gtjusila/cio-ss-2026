@@ -1,0 +1,32 @@
+
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 0,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "debug",
+      "description": "Debug Preset",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SCIP_DIR": "/opt/scip/debug/lib/cmake/scip"
+      }
+    },
+    {
+      "name": "release",
+      "description": "Release Preset",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON", 
+        "SCIP_DIR": "/opt/scip/release/lib/cmake/scip"
+      }
+    }
+    
+  ]
+}

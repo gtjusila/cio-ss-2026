@@ -1,3 +1,7 @@
 .claude
 **/build/
 **/.DS_Store
+
+stats
+final/mps_files/*.mps
+**/stats/results.txt

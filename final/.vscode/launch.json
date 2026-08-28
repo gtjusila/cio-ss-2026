@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "read_mps",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/read_mps",
+      "args": ["mps_files/mknap2_0.mps"],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}
