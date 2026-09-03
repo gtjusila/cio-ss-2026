@@ -256,7 +256,44 @@ SCIP_DECL_BRANCHEXECLP(DriebeekPenalties::scip_execlp) {
     auto least_up_penalty = SCIPinfinity(scip);
     auto least_down_penalty = SCIPinfinity(scip);
 
-    // TODO: Compute least_up_penalty and least_down_penalty.
+    for (int j = 0; j < std::ssize(tableau_coeff); ++j) {
+      auto coeff = tableau_coeff[j];
+      if (SCIPisZero(scip, coeff) || j == idx)
+        continue;  // Skip zero coefficients and the basic variable itself
+
+      /* Displacement of the nonbasic variable x_j forced by moving the basic
+       * variable x_i to the down/up branch. */
+      auto up_delta = -(1 / coeff) * up_gap;
+      auto down_delta = (1 / coeff) * down_gap;
+
+      auto up_penalty = SCIPinfinity(scip);
+      auto down_penalty = SCIPinfinity(scip);
+      auto base_status = base_stats[j];
+      auto reduced_cost = reduced_costs[j];
+
+      /* A fixed variable cannot move, so the movement is infeasible. */
+      auto is_fixed = SCIPisEQ(scip, lower_bounds[j], upper_bounds[j]);
+      if (is_fixed) continue;
+
+      assert(base_status != Basic);
+      if (base_status == AtZero) {
+        up_penalty = 0.0;
+        down_penalty = 0.0;
+      } else {
+        /* Movement beyond the active bound of x_j is infeasible. */
+        if (!((up_delta > 0 && base_status == AtUpBound) ||
+              (up_delta < 0 && base_status == AtLowBound))) {
+          up_penalty = reduced_cost * up_delta;
+        }
+        if (!((down_delta > 0 && base_status == AtUpBound) ||
+              (down_delta < 0 && base_status == AtLowBound))) {
+          down_penalty = reduced_cost * down_delta;
+        }
+      }
+
+      if (up_penalty < least_up_penalty) least_up_penalty = up_penalty;
+      if (down_penalty < least_down_penalty) least_down_penalty = down_penalty;
+    }
 
     /*
     * Our driebeek penalty give lowerbounds on the LP objective if we branch up
